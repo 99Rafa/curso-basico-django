@@ -80,3 +80,21 @@ class QuestionIndexViewTests(TestCase):
         self.assertNotContains(response, "No polls are available.")
         self.assertIn(past_question, response.context[self.questions_list_name])
         self.assertNotIn(future_question, response.context[self.questions_list_name])
+
+
+class QuestionDetailViewTests(TestCase):
+    def test_future_question(self):
+        """Returns 4040 on question with pub_date in the future"""
+        future_question = create_question("Future question", 1)
+        url = reverse("polls:detail", args=(future_question.pk,))
+        response = self.client.get(url)
+
+        self.assertEqual(response.status_code, 404)
+
+    def test_past_question(self):
+        """Shows the  question with a pub_date in the past"""
+        past_question = create_question("Past question", -1)
+        url = reverse("polls:detail", args=(past_question.pk,))
+        response = self.client.get(url)
+
+        self.assertContains(response, past_question.question_text)
