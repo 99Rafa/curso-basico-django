@@ -7,9 +7,18 @@ from django.utils import timezone
 from polls.models import Question
 
 
+def create_question(text, days=0):
+    """Creates a question with the given question_text, and published the given number of days
+    - Negative for a date in the past
+    - Positive por questions with a future date
+    """
+    publish_date = timezone.now() + datetime.timedelta(days=days)
+    return Question.objects.create(question_text=text, pub_date=publish_date)
+
+
 class QuestionModelTests(TestCase):
     def setUp(self):
-        self.question = Question("Test question?")
+        self.question = create_question("Test question")
 
     def test_was_published_recently_with_future_question(self):
         """Was_published_recently returns False for question whose pub_date is in the future"""
@@ -34,20 +43,40 @@ class QuestionModelTests(TestCase):
 
 
 class QuestionIndexViewTests(TestCase):
+    questions_list_name = "latest_question_list"
+
     def test_no_questions(self):
         """If no questions exist, a message is displayed"""
         response = self.client.get(reverse("polls:index"))
 
         self.assertEqual(response.status_code, 200)
         self.assertContains(response, "No polls are available.")
-        self.assertQuerysetEqual(response.context["latest_question_list"], [])
+        self.assertQuerysetEqual(response.context[self.questions_list_name], [])
 
     def test_ignore_future_questions(self):
         """Ignore all the questions with a future pub_date"""
-        future_date = timezone.now() + datetime.timedelta(days=2)
-        question = Question(question_text='Future question', pub_date=future_date)
-        question.save()
+        create_question("Test question", 2)
 
         response = self.client.get(reverse("polls:index"))
         self.assertContains(response, "No polls are available.")
-        self.assertQuerysetEqual(response.context["latest_question_list"], [])
+        self.assertQuerysetEqual(response.context[self.questions_list_name], [])
+
+    def test_shows_past_questions(self):
+        """Shows questions with a past pub_date"""
+        question1 = create_question("Test question", -1)
+        question2 = create_question("Test question 2", -2)
+
+        response = self.client.get(reverse("polls:index"))
+        self.assertNotContains(response, "No polls are available.")
+        self.assertIn(question1, response.context[self.questions_list_name])
+        self.assertIn(question2, response.context[self.questions_list_name])
+
+    def test_future_question_and_past_question(self):
+        """Shows the question with a past pub_date while ignoring the question with a future pub_date"""
+        past_question = create_question("Past question", -1)
+        future_question = create_question("Future question", 1)
+
+        response = self.client.get(reverse("polls:index"))
+        self.assertNotContains(response, "No polls are available.")
+        self.assertIn(past_question, response.context[self.questions_list_name])
+        self.assertNotIn(future_question, response.context[self.questions_list_name])
