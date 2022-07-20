@@ -1,0 +1,28 @@
+li {
+    list-style: none;
+    display: block;
+    margin: 24px;
+}
+
+li a {
+    color: white;
+    padding: 12px;
+    text-decoration: none;
+    border-radius: 8px;
+    background: gray;
+}
+
+li a:hover {
+    background: orange;
+}
+
+li a:active {
+    background: red;
+    color: white;
+}
+
+body {
+    display: grid;
+    background-size: cover;
+    background: white url("images/elmo.jpg") no-repeat center;
+}
