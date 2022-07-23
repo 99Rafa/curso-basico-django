@@ -1,3 +1,5 @@
+{% load static %}
+
 <!doctype html>
 <html lang="en">
 <head>
@@ -5,7 +7,10 @@
     <meta name="viewport"
           content="width=device-width, user-scalable=no, initial-scale=1.0, maximum-scale=1.0, minimum-scale=1.0">
     <meta http-equiv="X-UA-Compatible" content="ie=edge">
-    <title>Question</title>
+    <link rel="stylesheet" href="{% static 'polls/reset.css' %}">
+    <link rel="stylesheet" href="{% static 'polls/style.css' %}">
+    <link rel="stylesheet" href="{% static 'polls/detail.css' %}">
+    <title>{{ question.question_text }}</title>
 </head>
 <body>
 <form action="{% url 'polls:vote' question.id %}" method="post">
@@ -16,16 +21,17 @@
             <p><strong>{{ error_message }}</strong></p>
         {% endif %}
         {% for choice in question.choice_set.all %}
-            <input
-                    type="radio"
-                    name="choice"
-                    id="choice-{{ forloop.counter }}"
-                    value="{{ choice.id }}"
-            >
-            <label for="choice-{{ forloop.counter }}">
-                {{ choice.choice_text }}
-            </label>
-            <br>
+            <div class="choice-container">
+                <input
+                        type="radio"
+                        name="choice"
+                        id="choice-{{ forloop.counter }}"
+                        value="{{ choice.id }}"
+                >
+                <label for="choice-{{ forloop.counter }}">
+                    {{ choice.choice_text }}
+                </label>
+            </div>
         {% endfor %}
     </fieldset>
     <input type="submit" value="Vote">
